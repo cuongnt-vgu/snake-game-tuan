@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "common.h"
 
 // Some handy dandy macros for decompression
 #define E_CAP_HEX 0x45
@@ -72,7 +73,12 @@ enum board_init_status initialize_default_board(int** cells_p, size_t* width_p,
 enum board_init_status initialize_game(int** cells_p, size_t* width_p,
                                        size_t* height_p, snake_t* snake_p,
                                        char* board_rep) {
-    // TODO: implement!
+    initialize_default_board(cells_p, width_p, height_p);
+    g_game_over = 0;
+    g_score = 0;
+    snake_pos[0] = *height_p / 2;
+    snake_pos[1] = *width_p / 2;
+    snake_direction = 3;
 
     return INIT_SUCCESS;
 }

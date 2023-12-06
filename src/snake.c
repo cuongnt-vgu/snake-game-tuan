@@ -1,3 +1,4 @@
+#include "common.h"
 #define _XOPEN_SOURCE_EXTENDED 1
 #include <curses.h>
 #include <errno.h>
@@ -117,8 +118,6 @@ int main(int argc, char** argv) {
     // ? save name_buffer ?
     // ? save mbslen(name_buffer) ?
 
-    // TODO: Remove this message, uncomment the code below this message
-    //       and implement Part 1A here.
     printf(
         "             ____   \n"
         "Hello       / . .\\ \n"
@@ -127,7 +126,9 @@ int main(int argc, char** argv) {
         "   __________/ /    \n"
         "-=:___________/\n");
 
-    // initialize_window(width, height);
-    // TODO: implement the game loop here (Part 1A)!
-    // end_game(cells, width, height, &snake);
+    initialize_window(width, height);
+    usleep(100000);
+    update(cells, width, height, NULL, INPUT_NONE, 0);
+    render_game(cells, width, height);
+    end_game(cells, width, height, &snake);
 }
