@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "linked_list.h"
 #include "mbstrings.h"
 
@@ -28,7 +29,38 @@ void update(int* cells, size_t width, size_t height, snake_t* snake_p,
     // increases by 1. This function assumes that the board is surrounded by
     // walls, so it does not handle the case where a snake runs off the board.
 
-    // TODO: implement!
+    int previous_pos[2];
+    previous_pos[0] = snake_pos[0];
+    previous_pos[1] = snake_pos[1];
+
+    switch (input) {
+        case INPUT_UP: snake_pos[0]--; snake_direction = 0; break;
+        case INPUT_DOWN: snake_pos[0]++; snake_direction = 1; break;
+        case INPUT_LEFT: snake_pos[1]--; snake_direction = 2; break;
+        case INPUT_RIGHT: snake_pos[1]++; snake_direction = 3; break;
+        case INPUT_NONE: {
+            switch (snake_direction) {
+                case 0: snake_pos[0]--; break;
+                case 1: snake_pos[0]++; break;
+                case 2: snake_pos[1]--; break;
+                case 3: snake_pos[1]++; break;
+            }
+        }
+    }
+
+    // stop the game when next step is a wall
+    if (cells[20 * snake_pos[0] + snake_pos[1]] == FLAG_WALL) {
+        g_game_over = 1;
+        return;
+    }
+
+    if (cells[20 * snake_pos[0] + snake_pos[1]] == FLAG_FOOD) {
+        g_score++;
+        place_food(cells, width, height);
+    }
+
+    cells[20 * previous_pos[0] + previous_pos[1]] = FLAG_PLAIN_CELL;
+    cells[20 * snake_pos[0] + snake_pos[1]] = FLAG_SNAKE;
 }
 
 /** Sets a random space on the given board to food.

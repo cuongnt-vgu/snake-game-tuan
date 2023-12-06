@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
+#include "game.h"
 
 // Some handy dandy macros for decompression
 #define E_CAP_HEX 0x45
@@ -76,9 +77,10 @@ enum board_init_status initialize_game(int** cells_p, size_t* width_p,
     initialize_default_board(cells_p, width_p, height_p);
     g_game_over = 0;
     g_score = 0;
-    snake_pos[0] = *height_p / 2;
-    snake_pos[1] = *width_p / 2;
+    snake_pos[0] = 2;
+    snake_pos[1] = 2;
     snake_direction = 3;
+    place_food(*cells_p, *width_p, *height_p);
 
     return INIT_SUCCESS;
 }
