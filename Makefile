@@ -43,7 +43,7 @@ endif
 #
 ASAN ?= 1
 ifeq ($(ASAN),1)
-FLAGS += -fsanitize=address
+FLAGS += -fsanitize=address -fno-omit-frame-pointer
 endif
 
 # disable address sanitizer if we are targeting check-gdb

@@ -1,5 +1,6 @@
 #include "game_setup.h"
 
+#include <curses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,7 @@
 #define W_LOW_HEX 0x77
 #define DIGIT_START 0x30
 #define DIGIT_END 0x39
+#define DELIMITER 0x7C
 
 /** Initializes the board with walls around the edge of the board.
  *
@@ -55,6 +57,8 @@ enum board_init_status initialize_default_board(int** cells_p, size_t* width_p,
 
     // Add snake
     cells[20 * 2 + 2] = FLAG_SNAKE;
+    snake_pos[0] = 2;
+    snake_pos[1] = 2;
 
     return INIT_SUCCESS;
 }
@@ -74,11 +78,18 @@ enum board_init_status initialize_default_board(int** cells_p, size_t* width_p,
 enum board_init_status initialize_game(int** cells_p, size_t* width_p,
                                        size_t* height_p, snake_t* snake_p,
                                        char* board_rep) {
-    initialize_default_board(cells_p, width_p, height_p);
+    if (board_rep != NULL) {
+        enum board_init_status result = decompress_board_str(cells_p, width_p, height_p, snake_p, board_rep);
+
+        if (result != INIT_SUCCESS) {
+            return result;
+        }
+    } 
+    else {
+        initialize_default_board(cells_p, width_p, height_p);
+    }
     g_game_over = 0;
     g_score = 0;
-    snake_pos[0] = 2;
-    snake_pos[1] = 2;
     snake_direction = 3;
     place_food(*cells_p, *width_p, *height_p);
 
@@ -101,6 +112,109 @@ enum board_init_status initialize_game(int** cells_p, size_t* width_p,
 enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
                                             size_t* height_p, snake_t* snake_p,
                                             char* compressed) {
-    // TODO: implement!
-    return INIT_UNIMPLEMENTED;
+    char** main_save_ptr = &compressed;
+    char size_delimiter = 'x';
+    char delimiter = DELIMITER;
+    char* board_argument = strtok_r(compressed, &delimiter, main_save_ptr);
+    char** board_save_ptr = &board_argument;
+    char temp = board_argument[0];
+
+    int snake_pos_found = 0;
+    uint current_height = 1;
+    uint current_width;
+    int current_flag;
+    int current_run;
+
+    board_argument[0] = '0';
+
+    *height_p = atoi(strtok_r(board_argument, &size_delimiter, board_save_ptr));
+    *width_p = atoi(strtok_r(NULL, &size_delimiter, board_save_ptr));
+
+    int* cells = malloc(*height_p * *width_p * sizeof(int));
+    *cells_p = cells;
+    int* current_position = *cells_p;
+
+    if (temp != 'B') {
+        return INIT_ERR_BAD_CHAR;
+    }
+
+    board_argument = strtok_r(NULL, &delimiter, main_save_ptr);
+
+    while (board_argument != NULL) {
+        if (current_height > *height_p) {
+            return INIT_ERR_INCORRECT_DIMENSIONS;
+        }
+
+        current_width = 0;
+
+        while (*board_argument != '\0') {
+            switch (*board_argument) {
+                case E_CAP_HEX:
+                case E_LOW_HEX: {
+                    current_flag = FLAG_PLAIN_CELL;
+                    break;
+                }
+
+                case W_CAP_HEX:
+                case W_LOW_HEX: {
+                    current_flag = FLAG_WALL;
+                    break;
+                }
+
+                case S_CAP_HEX:
+                case S_LOW_HEX: {
+                    current_flag = FLAG_SNAKE;
+                    break;
+                }
+
+                default: {
+                    return INIT_ERR_BAD_CHAR;
+                }
+            }
+
+            board_argument++;
+            current_run = 0;
+
+            while (*board_argument >= DIGIT_START && *board_argument <= DIGIT_END) {
+                current_run *= 10;
+                current_run += *board_argument - 48;
+                board_argument++;
+            }
+
+            current_width += current_run;
+            
+            if (current_flag == FLAG_SNAKE) {
+                snake_pos[0] = current_height - 1;
+                snake_pos[1] = current_width - 1;
+                snake_pos_found += current_run;
+            }
+
+            if (current_width > *width_p) {
+                return INIT_ERR_INCORRECT_DIMENSIONS;
+            }
+
+            for (int i = 0; i < current_run; i++) {
+                *current_position = current_flag;
+                current_position++;
+            }
+
+        }
+
+        if (current_width != *width_p) {
+            return INIT_ERR_INCORRECT_DIMENSIONS;
+        }
+
+        current_height += 1;
+        board_argument = strtok_r(NULL, &delimiter, main_save_ptr);
+    }
+
+    if (current_height-1 < *height_p) {
+        return INIT_ERR_INCORRECT_DIMENSIONS;
+    }
+
+    if (snake_pos_found != 1) {
+        return INIT_ERR_WRONG_SNAKE_NUM;
+    }
+
+    return INIT_SUCCESS;
 }
