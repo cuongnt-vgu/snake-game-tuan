@@ -127,12 +127,12 @@ int main(int argc, char** argv) {
         "   __________/ /    \n"
         "-=:___________/\n");
 
-    initialize_window(width, height);
+    //initialize_window(width, height);
 
     while (g_game_over != 1) {
-        usleep(3000000);
-        update(cells, width, height, NULL, get_input(), 0);
-        render_game(cells, width, height);
+        usleep(100000);
+        update(cells, width, height, &snake, get_input(), 0);
+        //render_game(cells, width, height);
     }
     
     end_game(cells, width, height, &snake);

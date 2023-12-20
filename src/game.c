@@ -33,37 +33,38 @@ void update(int* cells, size_t width, size_t height, snake_t* snake_p,
     }
 
     int previous_pos[2];
-    previous_pos[0] = snake_pos[0];
-    previous_pos[1] = snake_pos[1];
+    int* position = get_first(snake_p -> position);
+    previous_pos[0] = position[0];
+    previous_pos[1] = position[1];
 
     switch (input) {
-        case INPUT_UP: snake_pos[0]--; snake_direction = 0; break;
-        case INPUT_DOWN: snake_pos[0]++; snake_direction = 1; break;
-        case INPUT_LEFT: snake_pos[1]--; snake_direction = 2; break;
-        case INPUT_RIGHT: snake_pos[1]++; snake_direction = 3; break;
+        case INPUT_UP: position[0]--; snake_p -> direction = 0; break;
+        case INPUT_DOWN: position[0]++; snake_p -> direction = 1; break;
+        case INPUT_LEFT: position[1]--; snake_p -> direction = 2; break;
+        case INPUT_RIGHT: position[1]++; snake_p -> direction = 3; break;
         case INPUT_NONE: {
-            switch (snake_direction) {
-                case 0: snake_pos[0]--; break;
-                case 1: snake_pos[0]++; break;
-                case 2: snake_pos[1]--; break;
-                case 3: snake_pos[1]++; break;
+            switch (snake_p -> direction) {
+                case 0: position[0]--; break;
+                case 1: position[0]++; break;
+                case 2: position[1]--; break;
+                case 3: position[1]++; break;
             }
         }
     }
 
     // stop the game when the step it is about to take is a wall
-    if (cells[width * snake_pos[0] + snake_pos[1]] == FLAG_WALL) {
+    if (cells[width * position[0] + position[1]] == FLAG_WALL) {
         g_game_over = 1;
         return;
     }
 
-    if (cells[width * snake_pos[0] + snake_pos[1]] == FLAG_FOOD) {
+    if (cells[width * position[0] + position[1]] == FLAG_FOOD) {
         g_score++;
         place_food(cells, width, height);
     }
 
     cells[width * previous_pos[0] + previous_pos[1]] = FLAG_PLAIN_CELL;
-    cells[width * snake_pos[0] + snake_pos[1]] = FLAG_SNAKE;
+    cells[width * position[0] + position[1]] = FLAG_SNAKE;
 }
 
 /** Sets a random space on the given board to food.
@@ -103,4 +104,12 @@ void read_name(char* write_into) {
  */
 void teardown(int* cells, snake_t* snake_p) {
     free(cells);
+
+    int* temp;
+    while (temp != NULL) {
+        temp = remove_first(&snake_p -> position);
+        free(temp);
+    }
+
+    free(snake_p -> position);
 }

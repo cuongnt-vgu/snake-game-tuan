@@ -6,6 +6,7 @@
 #include <string.h>
 #include "common.h"
 #include "game.h"
+#include "linked_list.h"
 
 // Some handy dandy macros for decompression
 #define E_CAP_HEX 0x45
@@ -57,8 +58,6 @@ enum board_init_status initialize_default_board(int** cells_p, size_t* width_p,
 
     // Add snake
     cells[20 * 2 + 2] = FLAG_SNAKE;
-    snake_pos[0] = 2;
-    snake_pos[1] = 2;
 
     return INIT_SUCCESS;
 }
@@ -78,6 +77,7 @@ enum board_init_status initialize_default_board(int** cells_p, size_t* width_p,
 enum board_init_status initialize_game(int** cells_p, size_t* width_p,
                                        size_t* height_p, snake_t* snake_p,
                                        char* board_rep) {
+    snake_p -> position = NULL;
     if (board_rep != NULL) {
         enum board_init_status result = decompress_board_str(cells_p, width_p, height_p, snake_p, board_rep);
 
@@ -87,10 +87,16 @@ enum board_init_status initialize_game(int** cells_p, size_t* width_p,
     } 
     else {
         initialize_default_board(cells_p, width_p, height_p);
+        int* position = malloc(sizeof(int) * 2);
+        position[0] = 2;
+        position[1] = 2;
+
+        insert_first(&snake_p -> position, position, sizeof(int) * 2);
+        free(position);
     }
     g_game_over = 0;
     g_score = 0;
-    snake_direction = 3;
+    snake_p -> direction = 3;
     place_food(*cells_p, *width_p, *height_p);
 
     return INIT_SUCCESS;
@@ -124,6 +130,8 @@ enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
     uint current_width;
     int current_flag;
     int current_run;
+
+    int position[2];
 
     board_argument[0] = '0';
 
@@ -184,8 +192,8 @@ enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
             current_width += current_run;
             
             if (current_flag == FLAG_SNAKE) {
-                snake_pos[0] = current_height - 1;
-                snake_pos[1] = current_width - 1;
+                position[0] = current_height - 1;
+                position[1] = current_width - 1;
                 snake_pos_found += current_run;
             }
 
@@ -213,8 +221,10 @@ enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
     }
 
     if (snake_pos_found != 1) {
+        printf("Line 222\n");
         return INIT_ERR_WRONG_SNAKE_NUM;
     }
 
+    insert_first(&snake_p -> position, position, sizeof(int)*2);
     return INIT_SUCCESS;
 }

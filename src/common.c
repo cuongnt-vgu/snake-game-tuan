@@ -2,8 +2,6 @@
 
 #include <stdlib.h>
 
-int snake_pos[2];
-int snake_direction;
 // Definition of global variables for game status.
 int g_game_over;
 int g_score;
