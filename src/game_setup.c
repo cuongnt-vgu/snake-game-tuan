@@ -87,16 +87,12 @@ enum board_init_status initialize_game(int** cells_p, size_t* width_p,
     } 
     else {
         initialize_default_board(cells_p, width_p, height_p);
-        int* position = malloc(sizeof(int) * 2);
-        position[0] = 2;
-        position[1] = 2;
+        int position[3] = {2, 2, 3};
 
-        insert_first(&snake_p -> position, position, sizeof(int) * 2);
-        free(position);
+        insert_first(&snake_p -> position, position, sizeof(int) * 3);
     }
     g_game_over = 0;
     g_score = 0;
-    snake_p -> direction = 3;
     place_food(*cells_p, *width_p, *height_p);
 
     return INIT_SUCCESS;
@@ -131,7 +127,7 @@ enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
     int current_flag;
     int current_run;
 
-    int position[2];
+    int position[3] = {0, 0, 3};
 
     board_argument[0] = '0';
 
@@ -221,10 +217,9 @@ enum board_init_status decompress_board_str(int** cells_p, size_t* width_p,
     }
 
     if (snake_pos_found != 1) {
-        printf("Line 222\n");
         return INIT_ERR_WRONG_SNAKE_NUM;
     }
 
-    insert_first(&snake_p -> position, position, sizeof(int)*2);
+    insert_first(&snake_p -> position, position, sizeof(int)*3);
     return INIT_SUCCESS;
 }

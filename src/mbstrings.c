@@ -22,7 +22,28 @@
  *
  * You will need bitwise operations for this part of the assignment!
  */
+
+const int checkBytes[3] = {0xe0, 0xf0, 0xf8};
+const int compareBytes[3] = {0xc0, 0xe0, 0xf0};
+
 size_t mbslen(const char* bytes) {
-    // TODO: implement!
-    return 0;
+    const char* currentPos = bytes;
+    int len = 0;
+
+    while (*currentPos != '\0') {
+        int flag = 0;
+        for (int i = 0; i < 3; i++) {
+            if ((*currentPos & checkBytes[i]) == compareBytes[i]) {
+                len++;
+                currentPos += i+2;
+                flag = 1;
+                break;
+            }
+        }
+        if (flag) continue;
+        len++;
+        currentPos++;
+    }
+
+    return len;
 }

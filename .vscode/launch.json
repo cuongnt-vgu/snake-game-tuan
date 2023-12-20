@@ -17,7 +17,7 @@
             "request": "launch",
             "name": "Debug at Snake",
             "program": "${workspaceFolder}/snake",
-            "args": ["0"],
+            "args": ["1"],
             "cwd": "${workspaceFolder}"
 
         }

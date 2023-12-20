@@ -45,14 +45,13 @@ void end_game(int* cells, size_t width, size_t height, snake_t* snake_p) {
     // Free any memory we've taken
     teardown(cells, snake_p);
 
-    // ****************** UNCOMMENT THIS CODE IN PART 2B ***********************
-    /*
+    
     // Render final GAME OVER PRESS ANY KEY TO EXIT screen
     render_game_over(width, height);
     usleep(1000 * 1000);  // 1000ms
     cbreak(); // Leave halfdelay mode
     getch();
-    */
+    
 
     // tell ncurses that we're done
     endwin();
@@ -113,25 +112,16 @@ int main(int argc, char** argv) {
     }
 
     // Read in the player's name & save its name and length
-    // TODO: Implement (in Part 2B)
-    // char name_buffer[1000];
-    // read_name(name_buffer);
-    // ? save name_buffer ?
-    // ? save mbslen(name_buffer) ?
-
-    printf(
-        "             ____   \n"
-        "Hello       / . .\\ \n"
-        "CS 300      \\  ---<\n"
-        "student!     \\  /  \n"
-        "   __________/ /    \n"
-        "-=:___________/\n");
+    char name_buffer[1000];
+    read_name(name_buffer);
+    g_name = name_buffer;
+    g_name_len = mbslen(name_buffer);
 
     //initialize_window(width, height);
 
     while (g_game_over != 1) {
-        usleep(100000);
-        update(cells, width, height, &snake, get_input(), 0);
+        usleep(300000);
+        update(cells, width, height, &snake, get_input(), snake_grows);
         //render_game(cells, width, height);
     }
     

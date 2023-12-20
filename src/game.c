@@ -9,6 +9,51 @@
 #include "linked_list.h"
 #include "mbstrings.h"
 
+void updateSnake(int** cells, size_t width, node_t* positions) {
+    node_t* temp = positions;
+    temp = temp -> next;
+    int previous_pos[2];
+    int* position;
+
+    while (temp) {
+        position = temp -> data;
+
+        previous_pos[0] = position[0];
+        previous_pos[1] = position[1];
+
+        switch (position[2]) {
+            case 0: position[0]--; break;
+            case 1: position[0]++; break;
+            case 2: position[1]--; break;
+            case 3: position[1]++; break;
+        }
+
+        (*cells)[width * previous_pos[0] + previous_pos[1]] = FLAG_PLAIN_CELL;
+        (*cells)[width * position[0] + position[1]] = FLAG_SNAKE;
+
+        temp = temp -> next;
+    }
+}
+
+void updatePositionVector(node_t* positions) {
+    node_t* temp = positions;
+    int* position;
+    int* prevPos;
+
+    while (temp -> next) {
+        temp = temp -> next;
+    }
+
+    while (temp -> prev) {
+        position = temp -> data;
+        prevPos = temp -> prev -> data;
+
+        position[2] = prevPos[2];
+
+        temp = temp -> prev;
+    }
+}
+
 /** Updates the game by a single step, and modifies the game information
  * accordingly. Arguments:
  *  - cells: a pointer to the first integer in an array of integers representing
@@ -37,13 +82,24 @@ void update(int* cells, size_t width, size_t height, snake_t* snake_p,
     previous_pos[0] = position[0];
     previous_pos[1] = position[1];
 
+    //preprocess input
+    if (g_score != 0) {
+        switch (input) {
+            case INPUT_UP: if (position[2] == 1) input = INPUT_DOWN; break;
+            case INPUT_DOWN: if (position[2] == 0) input = INPUT_UP; break;
+            case INPUT_LEFT: if (position[2] == 3) input = INPUT_RIGHT; break;
+            case INPUT_RIGHT: if (position[2] == 2) input = INPUT_LEFT; break;
+            default: break;
+        } 
+    }
+
     switch (input) {
-        case INPUT_UP: position[0]--; snake_p -> direction = 0; break;
-        case INPUT_DOWN: position[0]++; snake_p -> direction = 1; break;
-        case INPUT_LEFT: position[1]--; snake_p -> direction = 2; break;
-        case INPUT_RIGHT: position[1]++; snake_p -> direction = 3; break;
+        case INPUT_UP: position[0]--; position[2] = 0; break;
+        case INPUT_DOWN: position[0]++; position[2] = 1; break;
+        case INPUT_LEFT: position[1]--; position[2] = 2; break;
+        case INPUT_RIGHT: position[1]++; position[2] = 3; break;
         case INPUT_NONE: {
-            switch (snake_p -> direction) {
+            switch (position[2]) {
                 case 0: position[0]--; break;
                 case 1: position[0]++; break;
                 case 2: position[1]--; break;
@@ -58,13 +114,46 @@ void update(int* cells, size_t width, size_t height, snake_t* snake_p,
         return;
     }
 
+    if (cells[width * position[0] + position[1]] == FLAG_SNAKE) {
+        int* temp = get_last(snake_p -> position);
+        if (temp[0] != position[0] || temp[1] != position[1]) {
+            g_game_over = 1;
+            return;
+        }
+    }
+
     if (cells[width * position[0] + position[1]] == FLAG_FOOD) {
         g_score++;
+        if (growing) {
+            int* lastPos = get_last(snake_p -> position);
+            int newSnakeCellPos[3] = {lastPos[0], lastPos[1], lastPos[2]};
+            if (g_score <= 1) {
+                switch (newSnakeCellPos[2]) {
+                    case 0: newSnakeCellPos[0] += 2; break;
+                    case 1: newSnakeCellPos[0] -= 2; break;
+                    case 2: newSnakeCellPos[1] += 2; break;
+                    case 3: newSnakeCellPos[1] -= 2; break;
+                }
+            }
+            else {
+                switch (newSnakeCellPos[2]) {
+                    case 0: newSnakeCellPos[0] += 1; break;
+                    case 1: newSnakeCellPos[0] -= 1; break;
+                    case 2: newSnakeCellPos[1] += 1; break;
+                    case 3: newSnakeCellPos[1] -= 1; break;
+                }
+            }
+
+            insert_last(&snake_p -> position, newSnakeCellPos, sizeof(int)*3);
+        }
         place_food(cells, width, height);
     }
 
     cells[width * previous_pos[0] + previous_pos[1]] = FLAG_PLAIN_CELL;
     cells[width * position[0] + position[1]] = FLAG_SNAKE;
+
+    updateSnake(&cells, width, snake_p -> position);
+    updatePositionVector(snake_p -> position);
 }
 
 /** Sets a random space on the given board to food.
@@ -90,9 +179,17 @@ void place_food(int* cells, size_t width, size_t height) {
  *  - `write_into`: a pointer to the buffer to be written into.
  */
 void read_name(char* write_into) {
-    // TODO: implement! (remove the call to strcpy once you begin your
-    // implementation)
-    strcpy(write_into, "placeholder");
+    printf("Name > ");
+    fflush(0);
+    int numRead = read(0, write_into, 1000);
+    while (numRead <= 1) {
+        printf("Name Invalid: must be longer than 0 characters.\n");
+        printf("Name > ");
+        fflush(0);
+        numRead = read(0, write_into, 1000);
+    }
+
+    write_into[strcspn(write_into, "\n")] = 0;
 }
 
 /** Cleans up on game over — should free any allocated memory so that the
